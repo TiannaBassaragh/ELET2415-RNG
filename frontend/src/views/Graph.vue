@@ -43,8 +43,13 @@
 import { ref,reactive,watch ,onMounted,onBeforeUnmount,computed } from "vue";  
 import { useRoute ,useRouter } from "vue-router";
 import { useAppStore } from "@/store/appStore"; 
+import { useMqttStore } from '@/store/mqttStore'; // Import Mqtt Store
+import { storeToRefs } from "pinia";
 
 import Chart from 'chart.js/auto'; 
+// VARIABLES
+const Mqtt = useMqttStore();
+const { payload, payloadTopic } = storeToRefs(Mqtt);
 const AppStore    = useAppStore(); 
  
  
