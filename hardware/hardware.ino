@@ -29,26 +29,31 @@
 // DEFINE VARIABLES
 #define ARDUINOJSON_USE_DOUBLE      1 
 // DEFINE THE PINS THAT WILL BE MAPPED TO THE 7 SEG DISPLAY BELOW, 'a' to 'g'
-#define a     15
-/* Complete all others */
-
-
+#define a     27
+#define b 12
+#define c 14
+#define d 25
+#define e 32
+#define f 26
+#define g 33
+#define dp 15 //decimal point
 
 // DEFINE VARIABLES FOR TWO LEDs AND TWO BUTTONs. LED_A, LED_B, BTN_A , BTN_B
 #define LED_A 4
-/* Complete all others */
+#define LED_B 0
+#define BTN_A 2
 
 
 
 // MQTT CLIENT CONFIG  
-static const char* pubtopic       = "620012345";                    // Add your ID number here
-static const char* subtopic[]     = {"620012345_sub","/elet2415"};  // Array of Topics(Strings) to subscribe to
-static const char* mqtt_server    = "address or ip";                // Broker IP address or Domain name as a String 
+static const char* pubtopic       = "620162297";                    // Add your ID number here
+static const char* subtopic[]     = {"620162297_sub","/elet2415"};  // Array of Topics(Strings) to subscribe to
+static const char* mqtt_server    = "www.yanacreations.com";                // Broker IP address or Domain name as a String 
 static uint16_t mqtt_port         = 1883;
 
 // WIFI CREDENTIALS
-const char* ssid                  = "YOUR_SSID"; // Add your Wi-Fi ssid
-const char* password              = "YOUR_PASS"; // Add your Wi-Fi password 
+const char* ssid                  = "MonaConnect"; // Add your Wi-Fi ssid
+const char* password              = ""; // Add your Wi-Fi password 
 
 
 
@@ -97,9 +102,23 @@ void setup() {
   // CONFIGURE THE ARDUINO PINS OF THE 7SEG AS OUTPUT
   pinMode(a,OUTPUT);
   /* Configure all others here */
+  pinMode(b,OUTPUT);
+  pinMode(c,OUTPUT);
+  pinMode(d,OUTPUT);
+  pinMode(e,OUTPUT);
+  pinMode(f,OUTPUT);
+  pinMode(g,OUTPUT);
+  pinMode(dp,OUTPUT);
+
+  // Configuration of LEDs and Buttons
+  pinMode(LED_A,OUTPUT);
+  pinMode(LED_B,OUTPUT);
+  pinMode(BTN_A,INPUT_PULLUP);
+
+  Display(8);
 
   initialize();           // INIT WIFI, MQTT & NTP 
-  // vButtonCheckFunction(); // UNCOMMENT IF USING BUTTONS THEN ADD LOGIC FOR INTERFACING WITH BUTTONS IN THE vButtonCheck FUNCTION
+  vButtonCheckFunction(); // UNCOMMENT IF USING BUTTONS THEN ADD LOGIC FOR INTERFACING WITH BUTTONS IN THE vButtonCheck FUNCTION
 
 }
   
@@ -107,7 +126,6 @@ void setup() {
 
 void loop() {
     // put your main code here, to run repeatedly: 
-    
 }
 
 
@@ -123,6 +141,10 @@ void vButtonCheck( void * pvParameters )  {
     for( ;; ) {
         // Add code here to check if a button(S) is pressed
         // then execute appropriate function if a button is pressed  
+        if (digitalRead(BTN_A) == LOW) { 
+          vTaskDelay(50); // Debounce delay
+          GDP();
+        }
 
         vTaskDelay(200 / portTICK_PERIOD_MS);  
     }
@@ -138,7 +160,7 @@ void vUpdate( void * pvParameters )  {
           char message[1100]  = {0};
 
           // Add key:value pairs to JSon object
-          doc["id"]         = "620012345";
+          doc["id"]         = "620162297";
 
           serializeJson(doc, message);  // Seralize / Covert JSon object to JSon string and store in char* array
 
@@ -193,9 +215,11 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
     if(strcmp(led, "LED A") == 0){
       /*Add code to toggle LED A with appropriate function*/
+      toggleLED(LED_A);
     }
     if(strcmp(led, "LED B") == 0){
       /*Add code to toggle LED B with appropriate function*/
+      toggleLED(LED_B);
     }
 
     // PUBLISH UPDATE BACK TO FRONTEND
@@ -204,11 +228,14 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
     // Add key:value pairs to Json object according to below schema
     // ‘{"id": "student_id", "timestamp": 1702212234, "number": 9, "ledA": 0, "ledB": 0}’
-    doc["id"]         = "ID"; // Change to your student ID number
+    doc["id"]         = "620162297"; // Change to your student ID number
     doc["timestamp"]  = getTimeStamp();
     /*Add code here to insert all other variabes that are missing from Json object
     according to schema above
     */
+    doc["number"]     = number;
+    doc["ledA"]       = getLEDStatus(LED_A);
+    doc["ledB"]       = getLEDStatus(LED_B);
 
     serializeJson(doc, message);  // Seralize / Covert JSon object to JSon string and store in char* array  
     publish("topic", message);    // Publish to a topic that only the Frontend subscribes to.
@@ -237,19 +264,44 @@ bool publish(const char *topic, const char *payload){
 
 void Display(unsigned char number){
   /* This function takes an integer between 0 and 9 as input. This integer must be written to the 7-Segment display */
+  if (number > 9 || number < 0) return;  // Prevent invalid numbers
+  const int segPins[8] = {a, b, c, d, e, f, g, dp}; 
+
+  // 7-segment digit patterns (common cathode)
+  const byte digits[10] = {
+      0b00111111, // 0
+      0b00000110, // 1
+      0b01011011, // 2
+      0b01001111, // 3
+      0b01100110, // 4
+      0b01101101, // 5
+      0b01111101, // 6
+      0b00100111, // 7
+      0b01111111, // 8
+      0b01101111  // 9
+  };
+
+  byte pattern = digits[number];  // Get binary pattern
+  for (int i = 0; i < 7; i++) {
+    digitalWrite(segPins[i], (pattern >> i) & 1);
+  }
   
 }
 
 int8_t getLEDStatus(int8_t LED) {
   // RETURNS THE STATE OF A SPECIFIC LED. 0 = LOW, 1 = HIGH  
+  if(digitalRead(LED)==HIGH) {return 1;}
+  else {return 0;}
 }
 
 void setLEDState(int8_t LED, int8_t state){
   // SETS THE STATE OF A SPECIFIC LED   
+  digitalWrite(LED, state);
 }
 
 void toggleLED(int8_t LED){
   // TOGGLES THE STATE OF SPECIFIC LED   
+  digitalWrite(LED, !digitalRead(LED)); 
 }
 
 void GDP(void){
@@ -259,10 +311,11 @@ void GDP(void){
   /* Add code here to generate a random integer and then assign 
      this integer to number variable below
   */
-   number = 0 ;
+   number = random(0,10);
 
   // DISPLAY integer on 7Seg. by 
   /* Add code here to calling appropriate function that will display integer to 7-Seg*/
+  Display(number);
 
   // PUBLISH number to topic.
   JsonDocument doc; // Create JSon object
@@ -270,11 +323,14 @@ void GDP(void){
 
   // Add key:value pairs to Json object according to below schema
   // ‘{"id": "student_id", "timestamp": 1702212234, "number": 9, "ledA": 0, "ledB": 0}’
-  doc["id"]         = "ID"; // Change to your student ID number
+  doc["id"]         = "620162297"; // Change to your student ID number
   doc["timestamp"]  = getTimeStamp();
   /*Add code here to insert all other variabes that are missing from Json object
   according to schema above
   */
+    doc["number"]     = number;
+    doc["ledA"]       = getLEDStatus(LED_A);
+    doc["ledB"]       = getLEDStatus(LED_B);
 
   serializeJson(doc, message);  // Seralize / Covert JSon object to JSon string and store in char* array
   publish(pubtopic, message);
