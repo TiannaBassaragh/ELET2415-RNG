@@ -145,7 +145,7 @@ void vButtonCheck( void * pvParameters )  {
         // Add code here to check if a button(S) is pressed
         // then execute appropriate function if a button is pressed  
         if (digitalRead(BTN_A) == LOW) { 
-          vTaskDelay(25); // Debounce delay
+          vTaskDelay(40); // Debounce delay
           Serial.println("Button pressed.");
           GDP();
         }
