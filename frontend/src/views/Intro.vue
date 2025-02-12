@@ -14,7 +14,9 @@
                         <v-btn class="text-caption" text="Toggle" variant="tonal" color="primary" density="compact" @click="toggle('LED A')"></v-btn>
                     </v-card-item>
                 </v-card>
+            </v-col>
 
+            <v-col class="col col2" align="center">
                 <v-card title="LED B" width="150" density="compact" rounded="md" border flat>
                     <v-divider></v-divider>
 
@@ -28,8 +30,6 @@
                     </v-card-item>
                 </v-card>
             </v-col>
-
-            <v-col class="col col2" align="center"></v-col>
         </v-row>
         
         <v-row class="row" justify="center">
