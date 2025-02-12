@@ -1,8 +1,4 @@
 <template>
-    <div>
-        <!-- HTML HERE -->    
-        <h2>New Template</h2>
-    </div>
     <v-container class="container">
         <v-row class="row, bg-surfaceVariant" justify="center">
             <v-col class="col col1" align="center">
